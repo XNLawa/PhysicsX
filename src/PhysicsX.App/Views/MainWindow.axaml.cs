@@ -26,6 +26,23 @@ public partial class MainWindow : Window
 
                 viewModel.OnReset = () => canvas.Reset();
                 viewModel.OnGravityChangedAction = (g) => canvas.SetGravity(g);
+
+                // 连接场景编辑器
+                viewModel.SceneEditor.OnSceneLoaded = (project) =>
+                {
+                    canvas.LoadScene(project);
+                };
+
+                viewModel.SceneEditor.OnSceneCleared = () =>
+                {
+                    canvas.ClearScene();
+                };
+
+                // 监听场景对象变化
+                viewModel.SceneEditor.SceneObjects.CollectionChanged += (s, e) =>
+                {
+                    canvas.SyncSceneObjects(viewModel.SceneEditor.SceneObjects);
+                };
             }
         }
     }

@@ -101,6 +101,9 @@ void main()
     {
         if (_engine == null) return;
 
+        // 只在引擎为空时创建示例场景
+        if (_engine.Objects.Count > 0) return;
+
         // 地面
         var ground = new RigidBody("Ground")
         {
@@ -263,6 +266,144 @@ void main()
     public double GetGravity()
     {
         return _engine?.Gravity ?? 9.8;
+    }
+
+    public void LoadScene(Models.SceneProject project)
+    {
+        if (_engine == null) return;
+
+        // 清空当前场景
+        _engine.Clear();
+
+        // 加载项目中的对象
+        foreach (var sceneObj in project.Objects)
+        {
+            var rigidBody = ConvertToRigidBody(sceneObj);
+            if (rigidBody != null)
+            {
+                _engine.AddObject(rigidBody);
+            }
+        }
+
+        // 设置重力
+        _engine.Gravity = project.Gravity;
+    }
+
+    public void ClearScene()
+    {
+        if (_engine == null) return;
+        _engine.Clear();
+    }
+
+    public void SyncSceneObjects(System.Collections.ObjectModel.ObservableCollection<ViewModels.SceneObjectViewModel> sceneObjects)
+    {
+        if (_engine == null) return;
+
+        // 清空当前引擎对象
+        _engine.Clear();
+
+        // 添加场景编辑器中的所有对象
+        foreach (var sceneObj in sceneObjects)
+        {
+            var rigidBody = ConvertToRigidBody(sceneObj.ToSceneObject());
+            if (rigidBody != null)
+            {
+                _engine.AddObject(rigidBody);
+            }
+        }
+    }
+
+    private RigidBody? ConvertToRigidBody(Models.SceneObject sceneObj)
+    {
+        var rigidBody = new RigidBody(sceneObj.Name)
+        {
+            Position = sceneObj.Position.ToVector2(),
+            Velocity = sceneObj.Velocity.ToVector2(),
+            Mass = sceneObj.Mass,
+            Restitution = sceneObj.Restitution,
+            Friction = sceneObj.Friction,
+            IsStatic = sceneObj.IsStatic,
+            UseGravity = sceneObj.UseGravity
+        };
+
+        // 设置形状
+        switch (sceneObj.Type)
+        {
+            case "Circle":
+                if (sceneObj.Radius.HasValue)
+                {
+                    rigidBody.Shape = new CircleShape(sceneObj.Radius.Value);
+                }
+                break;
+
+            case "Box":
+                if (sceneObj.Width.HasValue && sceneObj.Height.HasValue)
+                {
+                    rigidBody.Shape = new BoxShape(sceneObj.Width.Value, sceneObj.Height.Value);
+                }
+                break;
+
+            case "Spring":
+                if (sceneObj.Width.HasValue && sceneObj.Stiffness.HasValue && sceneObj.Damping.HasValue)
+                {
+                    rigidBody.Shape = new SpringShape(
+                        sceneObj.Width.Value,
+                        sceneObj.Stiffness.Value,
+                        sceneObj.Damping.Value
+                    );
+                }
+                break;
+
+            case "Rope":
+                if (sceneObj.MaxLength.HasValue && sceneObj.Thickness.HasValue)
+                {
+                    rigidBody.Shape = new RopeShape(
+                        sceneObj.MaxLength.Value,
+                        sceneObj.Thickness.Value
+                    );
+                }
+                break;
+
+            case "Ramp":
+                if (sceneObj.Width.HasValue && sceneObj.Height.HasValue && sceneObj.Angle.HasValue)
+                {
+                    rigidBody.Shape = new RampShape(
+                        sceneObj.Width.Value,
+                        sceneObj.Height.Value,
+                        sceneObj.Angle.Value
+                    );
+                }
+                break;
+
+            case "Capsule":
+                if (sceneObj.Width.HasValue && sceneObj.Radius.HasValue)
+                {
+                    rigidBody.Shape = new CapsuleShape(
+                        sceneObj.Width.Value,
+                        sceneObj.Radius.Value
+                    );
+                }
+                break;
+        }
+
+        // 设置热力学属性
+        if (sceneObj.EnableThermal.HasValue)
+        {
+            rigidBody.Thermal.EnableThermal = sceneObj.EnableThermal.Value;
+        }
+        if (sceneObj.Temperature.HasValue)
+        {
+            rigidBody.Thermal.Temperature = sceneObj.Temperature.Value;
+        }
+        if (!string.IsNullOrEmpty(sceneObj.Material))
+        {
+            if (Enum.TryParse<PhysicsX.Core.Physics.ThermalProperties.Material>(sceneObj.Material, out var material))
+            {
+                rigidBody.Thermal.SetMaterial(material);
+            }
+        }
+
+        return rigidBody;
     }
 
     protected override void OnOpenGlDeinit(GlInterface gl)
