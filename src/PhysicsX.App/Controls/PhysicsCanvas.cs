@@ -7,6 +7,7 @@ using Avalonia.Threading;
 using PhysicsX.Core.Collision;
 using PhysicsX.Core.Engines;
 using PhysicsX.Core.Models;
+using PhysicsX.Core.Utils;
 using PhysicsX.Rendering.Primitives;
 using PhysicsX.Rendering.Renderer;
 using Silk.NET.OpenGL;
@@ -25,6 +26,7 @@ public class PhysicsCanvas : OpenGlControlBase
     private MechanicsEngine? _engine;
     private DispatcherTimer? _timer;
     private bool _isRunning;
+    private readonly Logger _logger = Logger.Instance;
 
     // 视图变换
     private Matrix4x4 _projectionMatrix;
@@ -46,21 +48,37 @@ public class PhysicsCanvas : OpenGlControlBase
     {
         base.OnOpenGlInit(gl);
 
+        _logger.Info("PhysicsCanvas OpenGL initialization started", "PhysicsCanvas");
+
         _gl = GL.GetApi(gl.GetProcAddress);
+
+        // 记录 OpenGL 信息
+        var glVersion = _gl.GetStringS(StringName.Version);
+        var glVendor = _gl.GetStringS(StringName.Vendor);
+        var glRenderer = _gl.GetStringS(StringName.Renderer);
+
+        _logger.Info($"OpenGL Version: {glVersion}", "PhysicsCanvas");
+        _logger.Info($"OpenGL Vendor: {glVendor}", "PhysicsCanvas");
+        _logger.Info($"OpenGL Renderer: {glRenderer}", "PhysicsCanvas");
 
         // 初始化渲染器
         InitializeRenderers();
 
         // 初始化物理引擎
         _engine = new MechanicsEngine { Gravity = 9.8 };
+        _logger.Info("Physics engine initialized with gravity = 9.8", "PhysicsCanvas");
 
         // 添加示例场景
         CreateSampleScene();
+
+        _logger.Info($"OpenGL initialization complete. Scene has {_engine.Objects.Count} objects", "PhysicsCanvas");
     }
 
     private void InitializeRenderers()
     {
         if (_gl == null) return;
+
+        _logger.Debug("Initializing renderers...", "PhysicsCanvas");
 
         // 加载 Shader
         string vertexShader = @"
@@ -92,9 +110,18 @@ void main()
 }
 ";
 
-        _shader = new ShaderProgram(_gl, vertexShader, fragmentShader);
-        _circleRenderer = new CircleRenderer(_gl);
-        _lineRenderer = new LineRenderer(_gl);
+        try
+        {
+            _shader = new ShaderProgram(_gl, vertexShader, fragmentShader);
+            _circleRenderer = new CircleRenderer(_gl);
+            _lineRenderer = new LineRenderer(_gl);
+            _logger.Info("Renderers initialized successfully", "PhysicsCanvas");
+        }
+        catch (Exception ex)
+        {
+            _logger.Error("Failed to initialize renderers", ex, "PhysicsCanvas");
+            throw;
+        }
     }
 
     private void CreateSampleScene()
@@ -332,6 +359,8 @@ void main()
     {
         if (_engine == null) return;
 
+        _logger.Info($"Loading scene: {project.Name}", "PhysicsCanvas");
+
         // 清空当前场景
         _engine.Clear();
 
@@ -342,38 +371,61 @@ void main()
             if (rigidBody != null)
             {
                 _engine.AddObject(rigidBody);
+                _logger.Debug($"Loaded object: {rigidBody.Name} at ({rigidBody.Position.X:F2}, {rigidBody.Position.Y:F2})", "PhysicsCanvas");
             }
         }
 
         // 设置重力
         _engine.Gravity = project.Gravity;
+
+        _logger.Info($"Scene loaded: {_engine.Objects.Count} objects, gravity = {project.Gravity}", "PhysicsCanvas");
     }
 
     public void ClearScene()
     {
         if (_engine == null) return;
         _engine.Clear();
+        _logger.Info("Scene cleared", "PhysicsCanvas");
     }
 
     public void SyncSceneObjects(System.Collections.ObjectModel.ObservableCollection<ViewModels.SceneObjectViewModel> sceneObjects)
     {
-        if (_engine == null) return;
+        if (_engine == null)
+        {
+            _logger.Warning("Engine is null, cannot sync objects", "PhysicsCanvas");
+            return;
+        }
+
+        _logger.Info($"Syncing {sceneObjects.Count} scene objects", "PhysicsCanvas");
 
         // 清空当前引擎对象
         _engine.Clear();
 
         // 添加场景编辑器中的所有对象
+        int successCount = 0;
         foreach (var sceneObj in sceneObjects)
         {
-            var rigidBody = ConvertToRigidBody(sceneObj.ToSceneObject());
-            if (rigidBody != null)
+            try
             {
-                _engine.AddObject(rigidBody);
-                System.Diagnostics.Debug.WriteLine($"[PhysicsCanvas] Added: {rigidBody.Name} at {rigidBody.Position}");
+                var rigidBody = ConvertToRigidBody(sceneObj.ToSceneObject());
+                if (rigidBody != null)
+                {
+                    _engine.AddObject(rigidBody);
+                    _logger.Debug($"Added: {rigidBody.Name} ({rigidBody.Shape?.GetType().Name}) at ({rigidBody.Position.X:F2}, {rigidBody.Position.Y:F2})", "PhysicsCanvas");
+                    successCount++;
+                }
+                else
+                {
+                    _logger.Warning($"Failed to convert scene object: {sceneObj.Name}", "PhysicsCanvas");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"Error adding object {sceneObj.Name}", ex, "PhysicsCanvas");
             }
         }
 
-        System.Diagnostics.Debug.WriteLine($"[PhysicsCanvas] Total objects in engine: {_engine.Objects.Count}");
+        _logger.Info($"Sync complete: {successCount}/{sceneObjects.Count} objects added. Total in engine: {_engine.Objects.Count}", "PhysicsCanvas");
 
         // 强制重绘
         RequestNextFrameRendering();
