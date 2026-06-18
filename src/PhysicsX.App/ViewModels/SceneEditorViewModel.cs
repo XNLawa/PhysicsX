@@ -85,6 +85,79 @@ public partial class SceneEditorViewModel : ViewModelBase
     }
 
     [RelayCommand]
+    private void AddSpring()
+    {
+        var obj = new SceneObjectViewModel
+        {
+            Id = Guid.NewGuid().ToString(),
+            Name = $"弹簧 {SceneObjects.Count + 1}",
+            Type = "Spring",
+            Position = new Vector2(0, 0),
+            Stiffness = 100.0f,
+            Damping = 0.1f,
+            Radius = 0.2f,
+            Width = 2.0f,
+            Color = "#F59E0B"
+        };
+        SceneObjects.Add(obj);
+        SelectedObject = obj;
+    }
+
+    [RelayCommand]
+    private void AddRope()
+    {
+        var obj = new SceneObjectViewModel
+        {
+            Id = Guid.NewGuid().ToString(),
+            Name = $"绳索 {SceneObjects.Count + 1}",
+            Type = "Rope",
+            Position = new Vector2(0, 0),
+            MaxLength = 3.0f,
+            Thickness = 0.1f,
+            Color = "#8B4513"
+        };
+        SceneObjects.Add(obj);
+        SelectedObject = obj;
+    }
+
+    [RelayCommand]
+    private void AddRamp()
+    {
+        var obj = new SceneObjectViewModel
+        {
+            Id = Guid.NewGuid().ToString(),
+            Name = $"斜面 {SceneObjects.Count + 1}",
+            Type = "Ramp",
+            Position = new Vector2(0, 5),
+            Width = 5.0f,
+            Height = 2.0f,
+            Angle = 30.0f,
+            IsStatic = true,
+            Color = "#9CA3AF"
+        };
+        SceneObjects.Add(obj);
+        SelectedObject = obj;
+    }
+
+    [RelayCommand]
+    private void AddCapsule()
+    {
+        var obj = new SceneObjectViewModel
+        {
+            Id = Guid.NewGuid().ToString(),
+            Name = $"胶囊 {SceneObjects.Count + 1}",
+            Type = "Capsule",
+            Position = new Vector2(0, 0),
+            Width = 1.0f, // Length
+            Radius = 0.3f,
+            Mass = 1.5,
+            Color = "#A78BFA"
+        };
+        SceneObjects.Add(obj);
+        SelectedObject = obj;
+    }
+
+    [RelayCommand]
     private void DeleteSelected()
     {
         if (SelectedObject != null)
@@ -236,6 +309,32 @@ public partial class SceneObjectViewModel : ViewModelBase
     [ObservableProperty]
     private string _color = "#3B82F6";
 
+    // 热力学属性
+    [ObservableProperty]
+    private double _temperature = 20.0;
+
+    [ObservableProperty]
+    private bool _enableThermal = false;
+
+    [ObservableProperty]
+    private string _material = "Aluminum"; // Aluminum, Iron, Copper, Wood, Rubber, Ice
+
+    // 扩展形状属性
+    [ObservableProperty]
+    private float? _angle; // 斜面角度
+
+    [ObservableProperty]
+    private float? _stiffness; // 弹簧刚度
+
+    [ObservableProperty]
+    private float? _damping; // 阻尼
+
+    [ObservableProperty]
+    private float? _maxLength; // 绳索最大长度
+
+    [ObservableProperty]
+    private float? _thickness; // 厚度
+
     public SceneObject ToSceneObject()
     {
         return new SceneObject
@@ -253,7 +352,15 @@ public partial class SceneObjectViewModel : ViewModelBase
             Radius = Radius,
             Width = Width,
             Height = Height,
-            Color = Color
+            Color = Color,
+            Temperature = Temperature,
+            EnableThermal = EnableThermal,
+            Material = Material,
+            Angle = Angle,
+            Stiffness = Stiffness,
+            Damping = Damping,
+            MaxLength = MaxLength,
+            Thickness = Thickness
         };
     }
 
@@ -274,7 +381,15 @@ public partial class SceneObjectViewModel : ViewModelBase
             Radius = obj.Radius,
             Width = obj.Width,
             Height = obj.Height,
-            Color = obj.Color
+            Color = obj.Color,
+            Temperature = obj.Temperature ?? 20.0,
+            EnableThermal = obj.EnableThermal ?? false,
+            Material = obj.Material ?? "Aluminum",
+            Angle = obj.Angle,
+            Stiffness = obj.Stiffness,
+            Damping = obj.Damping,
+            MaxLength = obj.MaxLength,
+            Thickness = obj.Thickness
         };
     }
 
@@ -294,7 +409,15 @@ public partial class SceneObjectViewModel : ViewModelBase
             Radius = Radius,
             Width = Width,
             Height = Height,
-            Color = Color
+            Color = Color,
+            Temperature = Temperature,
+            EnableThermal = EnableThermal,
+            Material = Material,
+            Angle = Angle,
+            Stiffness = Stiffness,
+            Damping = Damping,
+            MaxLength = MaxLength,
+            Thickness = Thickness
         };
     }
 }

@@ -1,5 +1,6 @@
 using System.Numerics;
 using PhysicsX.Core.Collision;
+using PhysicsX.Core.Physics;
 
 namespace PhysicsX.Core.Models;
 
@@ -67,6 +68,11 @@ public class RigidBody : PhysicsObject
     /// 碰撞形状
     /// </summary>
     public CollisionShape? Shape { get; set; }
+
+    /// <summary>
+    /// 热力学属性
+    /// </summary>
+    public ThermalProperties Thermal { get; set; } = new ThermalProperties();
 
     public RigidBody(string? name = null) : base(name)
     {

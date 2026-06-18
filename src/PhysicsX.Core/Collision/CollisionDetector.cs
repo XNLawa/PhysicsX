@@ -11,7 +11,11 @@ public enum ShapeType
 {
     Circle,
     Box,
-    Polygon
+    Polygon,
+    Spring,
+    Rope,
+    Ramp,
+    Capsule
 }
 
 /// <summary>

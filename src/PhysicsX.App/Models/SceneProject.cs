@@ -42,7 +42,7 @@ public class SceneObject
     public string Name { get; set; } = "Object";
 
     [JsonPropertyName("type")]
-    public string Type { get; set; } = "Circle"; // Circle, Box, Ground
+    public string Type { get; set; } = "Circle"; // Circle, Box, Ground, Spring, Rope, Ramp, Capsule
 
     [JsonPropertyName("position")]
     public Vector2Data Position { get; set; } = new();
@@ -76,6 +76,32 @@ public class SceneObject
 
     [JsonPropertyName("color")]
     public string Color { get; set; } = "#3B82F6";
+
+    // 热力学属性
+    [JsonPropertyName("temperature")]
+    public double? Temperature { get; set; }
+
+    [JsonPropertyName("enableThermal")]
+    public bool? EnableThermal { get; set; }
+
+    [JsonPropertyName("material")]
+    public string? Material { get; set; } // Aluminum, Iron, Copper, Wood, Rubber, Ice
+
+    // 扩展形状属性
+    [JsonPropertyName("angle")]
+    public float? Angle { get; set; } // 用于斜面
+
+    [JsonPropertyName("stiffness")]
+    public float? Stiffness { get; set; } // 弹簧刚度
+
+    [JsonPropertyName("damping")]
+    public float? Damping { get; set; } // 阻尼系数
+
+    [JsonPropertyName("maxLength")]
+    public float? MaxLength { get; set; } // 绳索最大长度
+
+    [JsonPropertyName("thickness")]
+    public float? Thickness { get; set; } // 绳索/胶囊厚度
 }
 
 /// <summary>

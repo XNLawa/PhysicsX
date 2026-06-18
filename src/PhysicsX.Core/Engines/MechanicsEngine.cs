@@ -6,6 +6,7 @@ using PhysicsX.Core.Interfaces;
 using PhysicsX.Core.Integrators;
 using PhysicsX.Core.Models;
 using PhysicsX.Core.Collision;
+using PhysicsX.Core.Physics;
 
 namespace PhysicsX.Core.Engines;
 
@@ -297,7 +298,7 @@ public class MechanicsEngine : ISimulationEngine
     }
 
     /// <summary>
-    /// 施加摩擦力冲量
+    /// 施加摩擦力冲量（并计算摩擦生热）
     /// </summary>
     private void ApplyFriction(RigidBody a, RigidBody b, CollisionInfo collision, float normalImpulse)
     {
@@ -323,6 +324,8 @@ public class MechanicsEngine : ISimulationEngine
         float mu = (float)Math.Sqrt(a.Friction * b.Friction);
 
         Vector2 frictionImpulse;
+        bool isKineticFriction = false;
+
         if (Math.Abs(jt) < normalImpulse * mu)
         {
             // 静摩擦
@@ -332,6 +335,7 @@ public class MechanicsEngine : ISimulationEngine
         {
             // 动摩擦
             frictionImpulse = -normalImpulse * mu * tangent;
+            isKineticFriction = true;
         }
 
         // 施加摩擦冲量
@@ -339,5 +343,53 @@ public class MechanicsEngine : ISimulationEngine
             a.Velocity -= frictionImpulse * invMassA;
         if (!b.IsStatic)
             b.Velocity += frictionImpulse * invMassB;
+
+        // 摩擦生热计算（仅动摩擦产生热量）
+        if (isKineticFriction && (a.Thermal.EnableThermal || b.Thermal.EnableThermal))
+        {
+            // 计算摩擦力大小：F = μ * N
+            float normalForce = normalImpulse / 0.016f; // 假设时间步长 0.016s (60 FPS)
+            float frictionForce = mu * normalForce;
+
+            // 相对滑动速度
+            float relativeSpeed = tangentLength;
+
+            // 假设接触时间（时间步长）
+            double contactTime = 0.016;
+
+            // 摩擦距离：d = v * t
+            double frictionDistance = relativeSpeed * contactTime;
+
+            // 摩擦生热：Q = F * d
+            double heat = ThermalPhysics.CalculateFrictionHeat(mu, normalForce, frictionDistance);
+
+            // 热量分配（按质量比例）
+            double totalMass = a.Mass + b.Mass;
+            double heatA = heat * (b.Mass / totalMass); // 轻物体获得更多热量（相对）
+            double heatB = heat * (a.Mass / totalMass);
+
+            // 累积热量
+            if (a.Thermal.EnableThermal && !a.IsStatic)
+            {
+                a.Thermal.AccumulatedHeat += heatA;
+                a.Thermal.Temperature = ThermalPhysics.CalculateTemperature(
+                    20.0, // 初始环境温度
+                    a.Thermal.AccumulatedHeat,
+                    a.Mass,
+                    a.Thermal.SpecificHeat
+                );
+            }
+
+            if (b.Thermal.EnableThermal && !b.IsStatic)
+            {
+                b.Thermal.AccumulatedHeat += heatB;
+                b.Thermal.Temperature = ThermalPhysics.CalculateTemperature(
+                    20.0,
+                    b.Thermal.AccumulatedHeat,
+                    b.Mass,
+                    b.Thermal.SpecificHeat
+                );
+            }
+        }
     }
 }
