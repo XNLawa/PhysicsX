@@ -67,7 +67,6 @@ jobs:
           -r ${{ matrix.platform }} \
           --self-contained true \
           -p:PublishSingleFile=true \
-          -p:PublishTrimmed=true \
           -o ./publish/${{ matrix.platform }}
 
     - name: Create ZIP archive (Windows)
