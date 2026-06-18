@@ -72,6 +72,15 @@ public class PhysicsCanvas : OpenGlControlBase
         CreateSampleScene();
 
         _logger.Info($"OpenGL initialization complete. Scene has {_engine.Objects.Count} objects", "PhysicsCanvas");
+
+        // 记录初始对象信息
+        foreach (var obj in _engine.Objects)
+        {
+            if (obj is RigidBody rb)
+            {
+                _logger.Info($"  - {rb.Name}: {rb.Shape?.GetType().Name} at ({rb.Position.X:F1}, {rb.Position.Y:F1})", "PhysicsCanvas");
+            }
+        }
     }
 
     private void InitializeRenderers()
@@ -178,6 +187,15 @@ void main()
         // 清屏 - 深灰色背景
         _gl.ClearColor(0.1f, 0.1f, 0.15f, 1.0f);
         _gl.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+
+        // 测试：绘制一条简单的线来验证渲染是否工作
+        _shader.Use();
+        _shader.SetUniform("uProjection", Matrix4x4.Identity);
+        _shader.SetUniform("uView", Matrix4x4.Identity);
+        _shader.SetUniform("uModel", Matrix4x4.Identity);
+
+        // 绘制一条红色对角线（从左下到右上）
+        _lineRenderer.DrawLine(new Vector2(-0.5f, -0.5f), new Vector2(0.5f, 0.5f), new Vector4(1, 0, 0, 1), 5.0f);
 
         // 设置投影矩阵（正交投影）
         float aspect = (float)Bounds.Width / (float)Bounds.Height;
