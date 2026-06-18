@@ -1,0 +1,45 @@
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>12.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Version>0.1.0-alpha</Version>
+    <Authors>PhysicsX Team</Authors>
+    <Company>PhysicsX</Company>
+    <Product>PhysicsX</Product>
+    <Copyright>Copyright © 2026 PhysicsX Team</Copyright>
+    <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/yourusername/PhysicsX</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/yourusername/PhysicsX</PackageProjectUrl>
+    <Description>Modern cross-platform physics simulation and problem-solving demonstration software</Description>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- Enable deterministic builds -->
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- Code analysis -->
+    <AnalysisLevel>latest</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+  </PropertyGroup>
+
+  <!-- Common package versions -->
+  <ItemGroup Label="Package Versions">
+    <PackageReference Update="Avalonia" Version="11.2.0" />
+    <PackageReference Update="Avalonia.Desktop" Version="11.2.0" />
+    <PackageReference Update="Avalonia.Themes.Fluent" Version="11.2.0" />
+    <PackageReference Update="CommunityToolkit.Mvvm" Version="8.3.2" />
+    <PackageReference Update="Silk.NET.OpenGL" Version="2.21.0" />
+    <PackageReference Update="Silk.NET.Windowing" Version="2.21.0" />
+    <PackageReference Update="MathNet.Numerics" Version="5.0.0" />
+    <PackageReference Update="System.Text.Json" Version="8.0.5" />
+    <PackageReference Update="xunit" Version="2.9.2" />
+    <PackageReference Update="xunit.runner.visualstudio" Version="2.8.2" />
+    <PackageReference Update="FluentAssertions" Version="6.12.1" />
+    <PackageReference Update="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,64 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{652FABC7-00E0-45EF-B9EA-5E74F6403B62}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhysicsX.Core", "src\PhysicsX.Core\PhysicsX.Core.csproj", "{F5D1E8C7-9271-4E31-9B04-78A9CF657008}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhysicsX.Rendering", "src\PhysicsX.Rendering\PhysicsX.Rendering.csproj", "{610350FB-CAA3-4F58-93C7-0D43456492EE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhysicsX.AI", "src\PhysicsX.AI\PhysicsX.AI.csproj", "{EFA328EA-096E-4A43-9859-805FC2891705}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhysicsX.Export", "src\PhysicsX.Export\PhysicsX.Export.csproj", "{C4E171CD-DE9C-497B-8AC9-433B7366D659}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhysicsX.App", "src\PhysicsX.App\PhysicsX.App.csproj", "{7E8C77D7-A8CC-41EE-A413-F273D5B830A6}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{06708E06-CB5A-4C47-8ECA-3CD967322AF3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhysicsX.Core.Tests", "tests\PhysicsX.Core.Tests\PhysicsX.Core.Tests.csproj", "{3E03D047-6CBA-43F2-9AE3-E3DD32AA3133}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F5D1E8C7-9271-4E31-9B04-78A9CF657008}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F5D1E8C7-9271-4E31-9B04-78A9CF657008}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F5D1E8C7-9271-4E31-9B04-78A9CF657008}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F5D1E8C7-9271-4E31-9B04-78A9CF657008}.Release|Any CPU.Build.0 = Release|Any CPU
+		{610350FB-CAA3-4F58-93C7-0D43456492EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{610350FB-CAA3-4F58-93C7-0D43456492EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{610350FB-CAA3-4F58-93C7-0D43456492EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{610350FB-CAA3-4F58-93C7-0D43456492EE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EFA328EA-096E-4A43-9859-805FC2891705}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EFA328EA-096E-4A43-9859-805FC2891705}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EFA328EA-096E-4A43-9859-805FC2891705}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EFA328EA-096E-4A43-9859-805FC2891705}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C4E171CD-DE9C-497B-8AC9-433B7366D659}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C4E171CD-DE9C-497B-8AC9-433B7366D659}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C4E171CD-DE9C-497B-8AC9-433B7366D659}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C4E171CD-DE9C-497B-8AC9-433B7366D659}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7E8C77D7-A8CC-41EE-A413-F273D5B830A6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7E8C77D7-A8CC-41EE-A413-F273D5B830A6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7E8C77D7-A8CC-41EE-A413-F273D5B830A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7E8C77D7-A8CC-41EE-A413-F273D5B830A6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3E03D047-6CBA-43F2-9AE3-E3DD32AA3133}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3E03D047-6CBA-43F2-9AE3-E3DD32AA3133}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3E03D047-6CBA-43F2-9AE3-E3DD32AA3133}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3E03D047-6CBA-43F2-9AE3-E3DD32AA3133}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{F5D1E8C7-9271-4E31-9B04-78A9CF657008} = {652FABC7-00E0-45EF-B9EA-5E74F6403B62}
+		{610350FB-CAA3-4F58-93C7-0D43456492EE} = {652FABC7-00E0-45EF-B9EA-5E74F6403B62}
+		{EFA328EA-096E-4A43-9859-805FC2891705} = {652FABC7-00E0-45EF-B9EA-5E74F6403B62}
+		{C4E171CD-DE9C-497B-8AC9-433B7366D659} = {652FABC7-00E0-45EF-B9EA-5E74F6403B62}
+		{7E8C77D7-A8CC-41EE-A413-F273D5B830A6} = {652FABC7-00E0-45EF-B9EA-5E74F6403B62}
+		{3E03D047-6CBA-43F2-9AE3-E3DD32AA3133} = {06708E06-CB5A-4C47-8ECA-3CD967322AF3}
+	EndGlobalSection
+EndGlobal
