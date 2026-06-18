@@ -251,16 +251,23 @@ void main()
                 : new Vector4(0.3f, 0.6f, 1.0f, 1.0f);
         }
 
-        _logger.Debug($"Rendering {body.Name} ({body.Shape.GetType().Name}) at ({body.Position.X:F2}, {body.Position.Y:F2}) color=({color.X:F2},{color.Y:F2},{color.Z:F2})", "PhysicsCanvas");
+        // 只在初次渲染时记录日志
+        // _logger.Debug($"Rendering {body.Name} ({body.Shape.GetType().Name}) at ({body.Position.X:F2}, {body.Position.Y:F2}) color=({color.X:F2},{color.Y:F2},{color.Z:F2})", "PhysicsCanvas");
 
         if (body.Shape is CircleShape circle)
         {
-            // 绘制圆形
+            // 绘制圆形 - 创建包含缩放的模型矩阵
+            var scaleMatrix = Matrix4x4.CreateScale(circle.Radius, circle.Radius, 1.0f);
+            var translationMatrix = Matrix4x4.CreateTranslation(new Vector3(body.Position, 0));
+            var modelMatrix2 = scaleMatrix * translationMatrix;
+            _shader.SetUniform("uModel", modelMatrix2);
+
             _circleRenderer.Draw(Vector2.Zero, circle.Radius, color);
 
             // 绘制方向指示线（显示旋转）
             var direction = new Vector2(MathF.Cos(body.Rotation), MathF.Sin(body.Rotation)) * circle.Radius;
-            _lineRenderer.DrawLine(Vector2.Zero, direction, new Vector4(1, 1, 0, 1), 2.0f);
+            _shader.SetUniform("uModel", Matrix4x4.Identity);
+            _lineRenderer.DrawLine(body.Position, body.Position + direction, new Vector4(1, 1, 0, 1), 2.0f);
         }
         else if (body.Shape is BoxShape box)
         {

@@ -76,16 +76,46 @@ public class CircleRenderer : IDisposable
     /// <summary>
     /// 渲染圆形
     /// </summary>
-    /// <param name="position">位置</param>
-    /// <param name="radius">半径</param>
+    /// <param name="position">位置（实际通过 uModel 矩阵传递）</param>
+    /// <param name="radius">半径（实际通过 uModel 矩阵传递）</param>
     /// <param name="color">颜色 (RGBA)</param>
-    public void Draw(Vector2 position, float radius, Vector4 color)
+    public unsafe void Draw(Vector2 position, float radius, Vector4 color)
     {
         _gl.BindVertexArray(_vao);
 
-        // 更新颜色（通过 uniform 或者重新上传顶点）
-        // 这里使用简化方法，实际应该通过 uniform 传递颜色
-        // 暂时使用白色，后续通过 shader uniform 控制
+        // 更新所有顶点的颜色
+        int vertexCount = _segments + 2;
+        float[] vertices = new float[vertexCount * 6];
+
+        // 更新所有顶点，保持位置不变，只修改颜色
+        // 中心点
+        vertices[0] = 0.0f;
+        vertices[1] = 0.0f;
+        vertices[2] = color.X; // r
+        vertices[3] = color.Y; // g
+        vertices[4] = color.Z; // b
+        vertices[5] = color.W; // a
+
+        // 圆周点
+        for (int i = 0; i <= _segments; i++)
+        {
+            float angle = (float)(i * 2.0 * Math.PI / _segments);
+            int offset = (i + 1) * 6;
+
+            vertices[offset + 0] = MathF.Cos(angle);
+            vertices[offset + 1] = MathF.Sin(angle);
+            vertices[offset + 2] = color.X; // r
+            vertices[offset + 3] = color.Y; // g
+            vertices[offset + 4] = color.Z; // b
+            vertices[offset + 5] = color.W; // a
+        }
+
+        // 更新 VBO
+        _gl.BindBuffer(BufferTargetARB.ArrayBuffer, _vbo);
+        fixed (float* v = vertices)
+        {
+            _gl.BufferData(BufferTargetARB.ArrayBuffer, (nuint)(vertices.Length * sizeof(float)), v, BufferUsageARB.DynamicDraw);
+        }
 
         _gl.DrawArrays(PrimitiveType.TriangleFan, 0, (uint)(_segments + 2));
 
