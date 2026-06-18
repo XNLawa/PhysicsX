@@ -80,9 +80,11 @@ public class PhysicsCanvas : OpenGlControlBase
 
         _logger.Debug("Initializing renderers...", "PhysicsCanvas");
 
-        // 加载 Shader
+        // 加载 Shader (OpenGL ES 3.0 兼容版本)
         string vertexShader = @"
-#version 330 core
+#version 300 es
+precision highp float;
+
 layout(location = 0) in vec2 aPosition;
 layout(location = 1) in vec4 aColor;
 
@@ -100,7 +102,9 @@ void main()
 ";
 
         string fragmentShader = @"
-#version 330 core
+#version 300 es
+precision highp float;
+
 in vec4 vColor;
 out vec4 FragColor;
 
