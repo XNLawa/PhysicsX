@@ -18,6 +18,10 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private string _simulationTime = "0.00s";
 
+    // 场景编辑器
+    [ObservableProperty]
+    private SceneEditorViewModel _sceneEditor = new();
+
     // 物理画布控件的引用（通过 View 设置）
     public Action? OnPlayPause { get; set; }
     public Action? OnReset { get; set; }

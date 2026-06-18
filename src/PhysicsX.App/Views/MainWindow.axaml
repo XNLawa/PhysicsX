@@ -4,12 +4,12 @@
         xmlns:controls="using:PhysicsX.App.Controls"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="700"
+        mc:Ignorable="d" d:DesignWidth="1400" d:DesignHeight="800"
         x:Class="PhysicsX.App.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
         Title="PhysicsX - 物理仿真与解题演示"
-        Width="1200" Height="700">
+        Width="1400" Height="800">
 
     <Design.DataContext>
         <vm:MainWindowViewModel/>
@@ -19,8 +19,18 @@
         <!-- 顶部工具栏 -->
         <Border Grid.Row="0" Background="#2D2D30" Padding="10">
             <Grid ColumnDefinitions="Auto,*,Auto">
-                <!-- 左侧：播放控制 -->
+                <!-- 左侧：文件和播放控制 -->
                 <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
+                    <!-- 文件菜单 -->
+                    <Button Content="📁 新建" Command="{Binding SceneEditor.ClearSceneCommand}"
+                            Width="70" Height="32" ToolTip.Tip="Ctrl+N"/>
+                    <Button Content="💾 保存" Command="{Binding SceneEditor.SaveProjectCommand}"
+                            Width="70" Height="32" ToolTip.Tip="Ctrl+S"/>
+                    <Button Content="📂 打开"
+                            Width="70" Height="32" ToolTip.Tip="Ctrl+O"/>
+
+                    <Separator Width="1" Height="24" Background="#555"/>
+
                     <Button Command="{Binding PlayPauseCommand}"
                             Width="100" Height="32">
                         <TextBlock Text="{Binding IsRunning, Converter={StaticResource BoolToPlayPauseConverter}}"/>
@@ -78,9 +88,144 @@
             </Grid>
         </Border>
 
-        <!-- 物理画布 -->
-        <controls:PhysicsCanvas Grid.Row="1"
-                               Name="PhysicsCanvas"/>
+        <!-- 主工作区 -->
+        <Grid Grid.Row="1" ColumnDefinitions="200,*,250">
+            <!-- 左侧工具栏 -->
+            <Border Grid.Column="0" Background="#252526" BorderBrush="#3E3E42" BorderThickness="0,0,1,0">
+                <ScrollViewer>
+                    <StackPanel Margin="10" Spacing="10">
+                        <TextBlock Text="添加对象" FontWeight="Bold" Foreground="White" FontSize="16"/>
+
+                        <Button Command="{Binding SceneEditor.AddCircleCommand}"
+                                HorizontalAlignment="Stretch" Height="40">
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <Ellipse Width="20" Height="20" Fill="#3B82F6"/>
+                                <TextBlock Text="小球" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding SceneEditor.AddBoxCommand}"
+                                HorizontalAlignment="Stretch" Height="40">
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <Rectangle Width="20" Height="20" Fill="#EF4444"/>
+                                <TextBlock Text="箱子" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding SceneEditor.AddGroundCommand}"
+                                HorizontalAlignment="Stretch" Height="40">
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <Rectangle Width="20" Height="5" Fill="#10B981"/>
+                                <TextBlock Text="地面" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Separator Height="1" Background="#3E3E42" Margin="0,10"/>
+
+                        <TextBlock Text="场景对象" FontWeight="Bold" Foreground="White" FontSize="16"/>
+
+                        <ListBox ItemsSource="{Binding SceneEditor.SceneObjects}"
+                                SelectedItem="{Binding SceneEditor.SelectedObject}"
+                                Background="Transparent"
+                                MinHeight="200">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="vm:SceneObjectViewModel">
+                                    <TextBlock Text="{Binding Name}"/>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <Button Command="{Binding SceneEditor.DuplicateSelectedCommand}"
+                                   Content="复制" Width="85" ToolTip.Tip="Ctrl+D"/>
+                            <Button Command="{Binding SceneEditor.DeleteSelectedCommand}"
+                                   Content="删除" Width="85" ToolTip.Tip="Delete"/>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <!-- 中间画布 -->
+            <controls:PhysicsCanvas Grid.Column="1"
+                                   Name="PhysicsCanvas"/>
+
+            <!-- 右侧属性面板 -->
+            <Border Grid.Column="2" Background="#252526" BorderBrush="#3E3E42" BorderThickness="1,0,0,0"
+                   IsVisible="{Binding SceneEditor.SelectedObject, Converter={x:Static ObjectConverters.IsNotNull}}">
+                <ScrollViewer>
+                    <StackPanel Margin="15" Spacing="10" DataContext="{Binding SceneEditor.SelectedObject}">
+                        <TextBlock Text="属性编辑器" FontWeight="Bold" Foreground="White" FontSize="16"/>
+
+                        <!-- 基本属性 -->
+                        <TextBlock Text="基本" Foreground="#AAA" FontSize="12" Margin="0,10,0,0"/>
+
+                        <TextBlock Text="名称:" Foreground="White"/>
+                        <TextBox Text="{Binding Name}" PlaceholderText="对象名称"/>
+
+                        <TextBlock Text="类型:" Foreground="White" Margin="0,5,0,0"/>
+                        <TextBlock Text="{Binding Type}" Foreground="#AAA"/>
+
+                        <!-- 物理属性 -->
+                        <TextBlock Text="物理" Foreground="#AAA" FontSize="12" Margin="0,15,0,0"/>
+
+                        <CheckBox Content="静态对象" IsChecked="{Binding IsStatic}"/>
+                        <CheckBox Content="使用重力" IsChecked="{Binding UseGravity}"/>
+
+                        <TextBlock Text="质量 (kg):" Foreground="White" Margin="0,5,0,0"/>
+                        <NumericUpDown Value="{Binding Mass}" Minimum="0.1" Maximum="1000" Increment="0.1"
+                                      FormatString="F2" IsEnabled="{Binding !IsStatic}"/>
+
+                        <TextBlock Text="恢复系数:" Foreground="White" Margin="0,5,0,0"/>
+                        <NumericUpDown Value="{Binding Restitution}" Minimum="0" Maximum="1" Increment="0.05"
+                                      FormatString="F2"/>
+
+                        <TextBlock Text="摩擦系数:" Foreground="White" Margin="0,5,0,0"/>
+                        <NumericUpDown Value="{Binding Friction}" Minimum="0" Maximum="1" Increment="0.05"
+                                      FormatString="F2"/>
+
+                        <!-- 形状属性 -->
+                        <TextBlock Text="形状" Foreground="#AAA" FontSize="12" Margin="0,15,0,0"/>
+
+                        <StackPanel IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=Circle}">
+                            <TextBlock Text="半径 (m):" Foreground="White"/>
+                            <NumericUpDown Value="{Binding Radius}" Minimum="0.1" Maximum="10" Increment="0.1"
+                                          FormatString="F2"/>
+                        </StackPanel>
+
+                        <StackPanel IsVisible="{Binding Type, Converter={StaticResource StringEqualsConverter}, ConverterParameter=Box}">
+                            <TextBlock Text="宽度 (m):" Foreground="White"/>
+                            <NumericUpDown Value="{Binding Width}" Minimum="0.1" Maximum="50" Increment="0.5"
+                                          FormatString="F2"/>
+
+                            <TextBlock Text="高度 (m):" Foreground="White" Margin="0,5,0,0"/>
+                            <NumericUpDown Value="{Binding Height}" Minimum="0.1" Maximum="50" Increment="0.5"
+                                          FormatString="F2"/>
+                        </StackPanel>
+
+                        <!-- 位置 -->
+                        <TextBlock Text="变换" Foreground="#AAA" FontSize="12" Margin="0,15,0,0"/>
+
+                        <Grid ColumnDefinitions="*,10,*">
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="X:" Foreground="White"/>
+                                <NumericUpDown Value="{Binding PositionX}" Minimum="-50" Maximum="50" Increment="0.5"
+                                              FormatString="F2"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Y:" Foreground="White"/>
+                                <NumericUpDown Value="{Binding PositionY}" Minimum="-50" Maximum="50" Increment="0.5"
+                                              FormatString="F2"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- 颜色 -->
+                        <TextBlock Text="外观" Foreground="#AAA" FontSize="12" Margin="0,15,0,0"/>
+                        <TextBlock Text="颜色:" Foreground="White"/>
+                        <TextBox Text="{Binding Color}" PlaceholderText="#3B82F6"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
     </Grid>
 
 </Window>
