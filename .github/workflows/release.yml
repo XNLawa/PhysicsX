@@ -70,26 +70,11 @@ jobs:
           -p:PublishSingleFile=true \
           -o ./publish/${{ matrix.platform }}
 
-    - name: Create ZIP archive (Windows)
-      if: matrix.os == 'windows-latest'
-      shell: pwsh
-      run: |
-        cd ./publish/${{ matrix.platform }}
-        Compress-Archive -Path * -DestinationPath ../../PhysicsX-${{ matrix.platform }}.zip
-        cd ../..
-
-    - name: Create ZIP archive (Unix)
-      if: matrix.os != 'windows-latest'
-      run: |
-        cd ./publish/${{ matrix.platform }}
-        zip -r ../../PhysicsX-${{ matrix.platform }}.zip .
-        cd ../..
-
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
         name: PhysicsX-${{ matrix.platform }}
-        path: PhysicsX-${{ matrix.platform }}.zip
+        path: ./publish/${{ matrix.platform }}
 
   create-release:
     name: Create Release
@@ -106,10 +91,21 @@ jobs:
       with:
         path: ./artifacts
 
+    - name: Create ZIP archives for release
+      run: |
+        cd ./artifacts
+        for platform_dir in */; do
+          platform_name=$(basename "$platform_dir")
+          cd "$platform_dir"
+          zip -r "../../PhysicsX-${platform_name}.zip" .
+          cd ..
+        done
+        cd ..
+
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
-        files: ./artifacts/**/*.zip
+        files: ./PhysicsX-*.zip
         draft: false
         prerelease: false
         generate_release_notes: true
