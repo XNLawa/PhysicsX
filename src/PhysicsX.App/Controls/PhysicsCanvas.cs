@@ -182,13 +182,30 @@ void main()
         if (_gl == null || _shader == null || _circleRenderer == null || _lineRenderer == null)
             return;
 
+        if (body.Shape == null)
+            return;
+
         var modelMatrix = Matrix4x4.CreateTranslation(new Vector3(body.Position, 0));
         _shader.SetUniform("uModel", modelMatrix);
+
+        // 根据热力学温度改变颜色
+        Vector4 color;
+        if (body.Thermal.EnableThermal)
+        {
+            color = body.Thermal.GetTemperatureColor();
+        }
+        else
+        {
+            // 默认颜色
+            color = body.IsStatic
+                ? new Vector4(0.2f, 0.8f, 0.2f, 1.0f)
+                : new Vector4(0.3f, 0.6f, 1.0f, 1.0f);
+        }
 
         if (body.Shape is CircleShape circle)
         {
             // 绘制圆形
-            _circleRenderer.Draw(Vector2.Zero, circle.Radius, new Vector4(0.3f, 0.6f, 1.0f, 1.0f));
+            _circleRenderer.Draw(Vector2.Zero, circle.Radius, color);
 
             // 绘制方向指示线（显示旋转）
             var direction = new Vector2(MathF.Cos(body.Rotation), MathF.Sin(body.Rotation)) * circle.Radius;
@@ -197,8 +214,51 @@ void main()
         else if (body.Shape is BoxShape box)
         {
             // 绘制矩形边框
-            var color = body.IsStatic ? new Vector4(0.2f, 0.8f, 0.2f, 1.0f) : new Vector4(0.8f, 0.3f, 0.3f, 1.0f);
             _lineRenderer.DrawRectangle(Vector2.Zero, box.Width, box.Height, color, 3.0f);
+        }
+        else if (body.Shape is SpringShape spring)
+        {
+            // 绘制弹簧（波浪线）
+            var springColor = new Vector4(1.0f, 0.6f, 0.0f, 1.0f);
+            _lineRenderer.DrawLine(new Vector2(-spring.RestLength/2, 0), new Vector2(spring.RestLength/2, 0), springColor, 3.0f);
+        }
+        else if (body.Shape is RopeShape rope)
+        {
+            // 绘制绳索（直线）
+            var ropeColor = new Vector4(0.55f, 0.27f, 0.07f, 1.0f);
+            _lineRenderer.DrawLine(new Vector2(-rope.MaxLength/2, 0), new Vector2(rope.MaxLength/2, 0), ropeColor, 2.0f);
+        }
+        else if (body.Shape is RampShape ramp)
+        {
+            // 绘制斜面（三角形）
+            var rampColor = new Vector4(0.6f, 0.6f, 0.6f, 1.0f);
+            var angleRad = ramp.Angle * MathF.PI / 180f;
+            var p1 = new Vector2(-ramp.Width/2, ramp.Height/2);
+            var p2 = new Vector2(ramp.Width/2, ramp.Height/2);
+            var p3 = new Vector2(ramp.Width/2, -ramp.Height/2);
+
+            _lineRenderer.DrawLine(p1, p2, rampColor, 3.0f);
+            _lineRenderer.DrawLine(p2, p3, rampColor, 3.0f);
+            _lineRenderer.DrawLine(p3, p1, rampColor, 3.0f);
+        }
+        else if (body.Shape is CapsuleShape capsule)
+        {
+            // 绘制胶囊（圆角矩形）
+            var capsuleColor = new Vector4(0.65f, 0.55f, 0.95f, 1.0f);
+
+            // 绘制两个圆
+            _circleRenderer.Draw(new Vector2(-capsule.Length/2, 0), capsule.Radius, capsuleColor);
+            _circleRenderer.Draw(new Vector2(capsule.Length/2, 0), capsule.Radius, capsuleColor);
+
+            // 绘制连接线
+            _lineRenderer.DrawLine(
+                new Vector2(-capsule.Length/2, capsule.Radius),
+                new Vector2(capsule.Length/2, capsule.Radius),
+                capsuleColor, 2.0f);
+            _lineRenderer.DrawLine(
+                new Vector2(-capsule.Length/2, -capsule.Radius),
+                new Vector2(capsule.Length/2, -capsule.Radius),
+                capsuleColor, 2.0f);
         }
 
         // 绘制速度向量（如果物体在运动）
@@ -309,8 +369,14 @@ void main()
             if (rigidBody != null)
             {
                 _engine.AddObject(rigidBody);
+                System.Diagnostics.Debug.WriteLine($"[PhysicsCanvas] Added: {rigidBody.Name} at {rigidBody.Position}");
             }
         }
+
+        System.Diagnostics.Debug.WriteLine($"[PhysicsCanvas] Total objects in engine: {_engine.Objects.Count}");
+
+        // 强制重绘
+        RequestNextFrameRendering();
     }
 
     private RigidBody? ConvertToRigidBody(Models.SceneObject sceneObj)

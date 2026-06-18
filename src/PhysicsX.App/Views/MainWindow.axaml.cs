@@ -9,6 +9,12 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
 
+        // 延迟到窗口加载后再连接
+        this.Loaded += OnWindowLoaded;
+    }
+
+    private void OnWindowLoaded(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
         // 连接 ViewModel 和 PhysicsCanvas
         if (DataContext is MainWindowViewModel viewModel)
         {
@@ -43,6 +49,12 @@ public partial class MainWindow : Window
                 {
                     canvas.SyncSceneObjects(viewModel.SceneEditor.SceneObjects);
                 };
+
+                // 初始同步：如果编辑器已有对象，立即同步
+                if (viewModel.SceneEditor.SceneObjects.Count > 0)
+                {
+                    canvas.SyncSceneObjects(viewModel.SceneEditor.SceneObjects);
+                }
             }
         }
     }
