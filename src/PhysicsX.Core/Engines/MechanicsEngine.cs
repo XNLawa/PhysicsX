@@ -5,6 +5,7 @@ using System.Numerics;
 using PhysicsX.Core.Interfaces;
 using PhysicsX.Core.Integrators;
 using PhysicsX.Core.Models;
+using PhysicsX.Core.Collision;
 
 namespace PhysicsX.Core.Engines;
 
@@ -71,8 +72,8 @@ public class MechanicsEngine : ISimulationEngine
         // 2. 积分求解运动方程
         IntegrateMotion(deltaTime);
 
-        // 3. 碰撞检测（待实现）
-        // DetectCollisions();
+        // 3. 碰撞检测和响应
+        DetectAndResolveCollisions();
 
         // 4. 约束求解（待实现）
         // SolveConstraints();
@@ -168,5 +169,175 @@ public class MechanicsEngine : ISimulationEngine
         {
             obj.ClearForces();
         }
+    }
+
+    /// <summary>
+    /// 检测并响应碰撞
+    /// </summary>
+    private void DetectAndResolveCollisions()
+    {
+        var rigidBodies = _objects.OfType<RigidBody>().Where(rb => rb.IsEnabled).ToList();
+
+        // 遍历所有物体对
+        for (int i = 0; i < rigidBodies.Count; i++)
+        {
+            for (int j = i + 1; j < rigidBodies.Count; j++)
+            {
+                var bodyA = rigidBodies[i];
+                var bodyB = rigidBodies[j];
+
+                // 至少有一个非静态对象才需要检测碰撞
+                if (bodyA.IsStatic && bodyB.IsStatic)
+                    continue;
+
+                // 必须有碰撞形状
+                if (bodyA.Shape == null || bodyB.Shape == null)
+                    continue;
+
+                // 根据形状类型选择碰撞检测方法
+                CollisionInfo collision = DetectCollision(bodyA, bodyB);
+
+                if (collision.HasCollision)
+                {
+                    ResolveCollision(bodyA, bodyB, collision);
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// 检测两个物体的碰撞
+    /// </summary>
+    private CollisionInfo DetectCollision(RigidBody a, RigidBody b)
+    {
+        if (a.Shape is CircleShape circleA && b.Shape is CircleShape circleB)
+        {
+            return CollisionDetector.CircleVsCircle(a, circleA, b, circleB);
+        }
+        else if (a.Shape is CircleShape circleShape && b.Shape is BoxShape boxShape)
+        {
+            return CollisionDetector.CircleVsBox(a, circleShape, b, boxShape);
+        }
+        else if (a.Shape is BoxShape boxShapeA && b.Shape is CircleShape circleShapeB)
+        {
+            var collision = CollisionDetector.CircleVsBox(b, circleShapeB, a, boxShapeA);
+            // 反转法线方向
+            collision.Normal = -collision.Normal;
+            return collision;
+        }
+        else if (a.Shape is BoxShape boxA && b.Shape is BoxShape boxB)
+        {
+            return CollisionDetector.BoxVsBox(a, boxA, b, boxB);
+        }
+
+        return new CollisionInfo { HasCollision = false };
+    }
+
+    /// <summary>
+    /// 解决碰撞（冲量法）
+    /// </summary>
+    private void ResolveCollision(RigidBody a, RigidBody b, CollisionInfo collision)
+    {
+        // 分离物体（位置修正）
+        PositionalCorrection(a, b, collision);
+
+        // 计算相对速度
+        Vector2 relativeVelocity = b.Velocity - a.Velocity;
+        float velocityAlongNormal = Vector2.Dot(relativeVelocity, collision.Normal);
+
+        // 物体正在分离，不需要施加冲量
+        if (velocityAlongNormal > 0)
+            return;
+
+        // 计算恢复系数（取两者的最小值）
+        float restitution = (float)Math.Min(a.Restitution, b.Restitution);
+
+        // 计算冲量大小
+        float invMassA = a.IsStatic ? 0 : 1.0f / (float)a.Mass;
+        float invMassB = b.IsStatic ? 0 : 1.0f / (float)b.Mass;
+        float invMassSum = invMassA + invMassB;
+
+        if (invMassSum < 0.0001f) // 两个都是静态对象
+            return;
+
+        float impulseMagnitude = -(1 + restitution) * velocityAlongNormal / invMassSum;
+        Vector2 impulse = impulseMagnitude * collision.Normal;
+
+        // 施加冲量
+        if (!a.IsStatic)
+            a.Velocity -= impulse * invMassA;
+        if (!b.IsStatic)
+            b.Velocity += impulse * invMassB;
+
+        // 摩擦力冲量
+        ApplyFriction(a, b, collision, impulseMagnitude);
+    }
+
+    /// <summary>
+    /// 位置修正（防止物体穿透）
+    /// </summary>
+    private void PositionalCorrection(RigidBody a, RigidBody b, CollisionInfo collision)
+    {
+        const float percent = 0.4f; // 穿透修正百分比
+        const float slop = 0.01f;   // 允许的小穿透量
+
+        float invMassA = a.IsStatic ? 0 : 1.0f / (float)a.Mass;
+        float invMassB = b.IsStatic ? 0 : 1.0f / (float)b.Mass;
+        float invMassSum = invMassA + invMassB;
+
+        if (invMassSum < 0.0001f)
+            return;
+
+        Vector2 correction = (Math.Max(collision.Penetration - slop, 0.0f) / invMassSum) * percent * collision.Normal;
+
+        if (!a.IsStatic)
+            a.Position -= correction * invMassA;
+        if (!b.IsStatic)
+            b.Position += correction * invMassB;
+    }
+
+    /// <summary>
+    /// 施加摩擦力冲量
+    /// </summary>
+    private void ApplyFriction(RigidBody a, RigidBody b, CollisionInfo collision, float normalImpulse)
+    {
+        Vector2 relativeVelocity = b.Velocity - a.Velocity;
+
+        // 计算切线方向（垂直于法线）
+        Vector2 tangent = relativeVelocity - Vector2.Dot(relativeVelocity, collision.Normal) * collision.Normal;
+        float tangentLength = tangent.Length();
+
+        if (tangentLength < 0.0001f)
+            return;
+
+        tangent /= tangentLength; // 归一化切线
+
+        // 计算切线冲量
+        float invMassA = a.IsStatic ? 0 : 1.0f / (float)a.Mass;
+        float invMassB = b.IsStatic ? 0 : 1.0f / (float)b.Mass;
+        float invMassSum = invMassA + invMassB;
+
+        float jt = -Vector2.Dot(relativeVelocity, tangent) / invMassSum;
+
+        // 库仑摩擦定律
+        float mu = (float)Math.Sqrt(a.Friction * b.Friction);
+
+        Vector2 frictionImpulse;
+        if (Math.Abs(jt) < normalImpulse * mu)
+        {
+            // 静摩擦
+            frictionImpulse = jt * tangent;
+        }
+        else
+        {
+            // 动摩擦
+            frictionImpulse = -normalImpulse * mu * tangent;
+        }
+
+        // 施加摩擦冲量
+        if (!a.IsStatic)
+            a.Velocity -= frictionImpulse * invMassA;
+        if (!b.IsStatic)
+            b.Velocity += frictionImpulse * invMassB;
     }
 }

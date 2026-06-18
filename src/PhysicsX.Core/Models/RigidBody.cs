@@ -1,4 +1,5 @@
 using System.Numerics;
+using PhysicsX.Core.Collision;
 
 namespace PhysicsX.Core.Models;
 
@@ -61,6 +62,11 @@ public class RigidBody : PhysicsObject
     /// 是否为静态对象（无限质量，不移动）
     /// </summary>
     public bool IsStatic { get; set; }
+
+    /// <summary>
+    /// 碰撞形状
+    /// </summary>
+    public CollisionShape? Shape { get; set; }
 
     public RigidBody(string? name = null) : base(name)
     {
