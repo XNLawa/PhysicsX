@@ -1,20 +1,86 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:PhysicsX.App.ViewModels"
+        xmlns:controls="using:PhysicsX.App.Controls"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="700"
         x:Class="PhysicsX.App.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="PhysicsX.App">
+        Title="PhysicsX - 物理仿真与解题演示"
+        Width="1200" Height="700">
 
     <Design.DataContext>
-        <!-- This only sets the DataContext for the previewer in an IDE,
-             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
-    <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+    <Grid RowDefinitions="Auto,*">
+        <!-- 顶部工具栏 -->
+        <Border Grid.Row="0" Background="#2D2D30" Padding="10">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <!-- 左侧：播放控制 -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
+                    <Button Command="{Binding PlayPauseCommand}"
+                            Width="100" Height="32">
+                        <TextBlock Text="{Binding IsRunning, Converter={StaticResource BoolToPlayPauseConverter}}"/>
+                    </Button>
+
+                    <Button Command="{Binding ResetCommand}"
+                            Content="⟲ 重置"
+                            Width="80" Height="32"/>
+                </StackPanel>
+
+                <!-- 中间：重力设置 -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10"
+                           HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock Text="重力加速度 (m/s²):" VerticalAlignment="Center"
+                              Foreground="White" FontSize="14"/>
+
+                    <NumericUpDown Value="{Binding Gravity}"
+                                  Minimum="0" Maximum="100"
+                                  Increment="0.1"
+                                  FormatString="F2"
+                                  Width="100"/>
+
+                    <TextBlock Text="预设:" VerticalAlignment="Center"
+                              Foreground="#AAAAAA" Margin="10,0,0,0"/>
+
+                    <Button Command="{Binding SetEarthGravityCommand}"
+                           Content="🌍 地球" ToolTip.Tip="9.8 m/s²" Height="28"/>
+
+                    <Button Command="{Binding SetMoonGravityCommand}"
+                           Content="🌙 月球" ToolTip.Tip="1.62 m/s²" Height="28"/>
+
+                    <Button Command="{Binding SetMarsGravityCommand}"
+                           Content="🔴 火星" ToolTip.Tip="3.71 m/s²" Height="28"/>
+
+                    <Button Command="{Binding SetJupiterGravityCommand}"
+                           Content="🪐 木星" ToolTip.Tip="24.79 m/s²" Height="28"/>
+
+                    <Button Command="{Binding SetZeroGravityCommand}"
+                           Content="🚀 太空" ToolTip.Tip="0 m/s²" Height="28"/>
+                </StackPanel>
+
+                <!-- 右侧：信息显示 -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="15">
+                    <TextBlock VerticalAlignment="Center" Foreground="White">
+                        <Run Text="时间: "/>
+                        <Run Text="{Binding SimulationTime}" FontWeight="Bold"/>
+                    </TextBlock>
+
+                    <TextBlock VerticalAlignment="Center" Foreground="White">
+                        <Run Text="g = "/>
+                        <Run Text="{Binding Gravity, StringFormat='{}{0:F2}'}" FontWeight="Bold"/>
+                        <Run Text=" m/s²"/>
+                    </TextBlock>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- 物理画布 -->
+        <controls:PhysicsCanvas Grid.Row="1"
+                               Name="PhysicsCanvas"/>
+    </Grid>
 
 </Window>

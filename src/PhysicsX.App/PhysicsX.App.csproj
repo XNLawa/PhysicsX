@@ -23,4 +23,9 @@
     </PackageReference>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.1" />
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PhysicsX.Core\PhysicsX.Core.csproj" />
+    <ProjectReference Include="..\PhysicsX.Rendering\PhysicsX.Rendering.csproj" />
+  </ItemGroup>
 </Project>
