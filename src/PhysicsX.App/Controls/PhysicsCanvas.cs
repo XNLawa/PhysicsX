@@ -188,15 +188,6 @@ void main()
         _gl.ClearColor(0.1f, 0.1f, 0.15f, 1.0f);
         _gl.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-        // 测试：绘制一条简单的线来验证渲染是否工作
-        _shader.Use();
-        _shader.SetUniform("uProjection", Matrix4x4.Identity);
-        _shader.SetUniform("uView", Matrix4x4.Identity);
-        _shader.SetUniform("uModel", Matrix4x4.Identity);
-
-        // 绘制一条红色对角线（从左下到右上）
-        _lineRenderer.DrawLine(new Vector2(-0.5f, -0.5f), new Vector2(0.5f, 0.5f), new Vector4(1, 0, 0, 1), 5.0f);
-
         // 设置投影矩阵（正交投影）
         float aspect = (float)Bounds.Width / (float)Bounds.Height;
         float viewWidth = (float)Bounds.Width / _zoom;
@@ -252,9 +243,6 @@ void main()
             return;
         }
 
-        var modelMatrix = Matrix4x4.CreateTranslation(new Vector3(body.Position, 0));
-        _shader.SetUniform("uModel", modelMatrix);
-
         // 根据热力学温度改变颜色
         Vector4 color;
         if (body.Thermal.EnableThermal)
@@ -269,16 +257,13 @@ void main()
                 : new Vector4(0.3f, 0.6f, 1.0f, 1.0f);
         }
 
-        // 只在初次渲染时记录日志
-        // _logger.Debug($"Rendering {body.Name} ({body.Shape.GetType().Name}) at ({body.Position.X:F2}, {body.Position.Y:F2}) color=({color.X:F2},{color.Y:F2},{color.Z:F2})", "PhysicsCanvas");
-
         if (body.Shape is CircleShape circle)
         {
-            // 绘制圆形 - 创建包含缩放的模型矩阵
+            // 绘制圆形 - 创建包含缩放和平移的模型矩阵
             var scaleMatrix = Matrix4x4.CreateScale(circle.Radius, circle.Radius, 1.0f);
             var translationMatrix = Matrix4x4.CreateTranslation(new Vector3(body.Position, 0));
-            var modelMatrix2 = scaleMatrix * translationMatrix;
-            _shader.SetUniform("uModel", modelMatrix2);
+            var modelMatrix = scaleMatrix * translationMatrix;
+            _shader.SetUniform("uModel", modelMatrix);
 
             _circleRenderer.Draw(Vector2.Zero, circle.Radius, color);
 
@@ -290,23 +275,31 @@ void main()
         else if (body.Shape is BoxShape box)
         {
             // 绘制矩形边框
+            var modelMatrix = Matrix4x4.CreateTranslation(new Vector3(body.Position, 0));
+            _shader.SetUniform("uModel", modelMatrix);
             _lineRenderer.DrawRectangle(Vector2.Zero, box.Width, box.Height, color, 3.0f);
         }
         else if (body.Shape is SpringShape spring)
         {
             // 绘制弹簧（波浪线）
+            var modelMatrix = Matrix4x4.CreateTranslation(new Vector3(body.Position, 0));
+            _shader.SetUniform("uModel", modelMatrix);
             var springColor = new Vector4(1.0f, 0.6f, 0.0f, 1.0f);
             _lineRenderer.DrawLine(new Vector2(-spring.RestLength/2, 0), new Vector2(spring.RestLength/2, 0), springColor, 3.0f);
         }
         else if (body.Shape is RopeShape rope)
         {
             // 绘制绳索（直线）
+            var modelMatrix = Matrix4x4.CreateTranslation(new Vector3(body.Position, 0));
+            _shader.SetUniform("uModel", modelMatrix);
             var ropeColor = new Vector4(0.55f, 0.27f, 0.07f, 1.0f);
             _lineRenderer.DrawLine(new Vector2(-rope.MaxLength/2, 0), new Vector2(rope.MaxLength/2, 0), ropeColor, 2.0f);
         }
         else if (body.Shape is RampShape ramp)
         {
             // 绘制斜面（三角形）
+            var modelMatrix = Matrix4x4.CreateTranslation(new Vector3(body.Position, 0));
+            _shader.SetUniform("uModel", modelMatrix);
             var rampColor = new Vector4(0.6f, 0.6f, 0.6f, 1.0f);
             var angleRad = ramp.Angle * MathF.PI / 180f;
             var p1 = new Vector2(-ramp.Width/2, ramp.Height/2);
@@ -320,6 +313,8 @@ void main()
         else if (body.Shape is CapsuleShape capsule)
         {
             // 绘制胶囊（圆角矩形）
+            var modelMatrix = Matrix4x4.CreateTranslation(new Vector3(body.Position, 0));
+            _shader.SetUniform("uModel", modelMatrix);
             var capsuleColor = new Vector4(0.65f, 0.55f, 0.95f, 1.0f);
 
             // 绘制两个圆

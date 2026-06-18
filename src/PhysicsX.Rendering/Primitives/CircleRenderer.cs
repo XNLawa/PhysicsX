@@ -83,18 +83,18 @@ public class CircleRenderer : IDisposable
     {
         _gl.BindVertexArray(_vao);
 
-        // 更新所有顶点的颜色
+        // 只更新颜色到 uniform（如果 shader 支持），或者更新 VBO
+        // 这里简化为直接更新整个 VBO，但只改颜色
         int vertexCount = _segments + 2;
         float[] vertices = new float[vertexCount * 6];
 
-        // 更新所有顶点，保持位置不变，只修改颜色
         // 中心点
         vertices[0] = 0.0f;
         vertices[1] = 0.0f;
-        vertices[2] = color.X; // r
-        vertices[3] = color.Y; // g
-        vertices[4] = color.Z; // b
-        vertices[5] = color.W; // a
+        vertices[2] = color.X;
+        vertices[3] = color.Y;
+        vertices[4] = color.Z;
+        vertices[5] = color.W;
 
         // 圆周点
         for (int i = 0; i <= _segments; i++)
@@ -104,17 +104,17 @@ public class CircleRenderer : IDisposable
 
             vertices[offset + 0] = MathF.Cos(angle);
             vertices[offset + 1] = MathF.Sin(angle);
-            vertices[offset + 2] = color.X; // r
-            vertices[offset + 3] = color.Y; // g
-            vertices[offset + 4] = color.Z; // b
-            vertices[offset + 5] = color.W; // a
+            vertices[offset + 2] = color.X;
+            vertices[offset + 3] = color.Y;
+            vertices[offset + 4] = color.Z;
+            vertices[offset + 5] = color.W;
         }
 
         // 更新 VBO
         _gl.BindBuffer(BufferTargetARB.ArrayBuffer, _vbo);
         fixed (float* v = vertices)
         {
-            _gl.BufferData(BufferTargetARB.ArrayBuffer, (nuint)(vertices.Length * sizeof(float)), v, BufferUsageARB.DynamicDraw);
+            _gl.BufferSubData(BufferTargetARB.ArrayBuffer, 0, (nuint)(vertices.Length * sizeof(float)), v);
         }
 
         _gl.DrawArrays(PrimitiveType.TriangleFan, 0, (uint)(_segments + 2));
