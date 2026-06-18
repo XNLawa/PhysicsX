@@ -61,6 +61,7 @@ jobs:
         dotnet-version: 8.0.x
 
     - name: Publish ${{ matrix.platform }}
+      shell: bash
       run: |
         dotnet publish src/PhysicsX.App/PhysicsX.App.csproj \
           -c Release \
