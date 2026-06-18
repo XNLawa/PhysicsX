@@ -170,9 +170,12 @@ void main()
     protected override void OnOpenGlRender(GlInterface gl, int fb)
     {
         if (_gl == null || _shader == null || _circleRenderer == null || _lineRenderer == null || _engine == null)
+        {
+            _logger.Warning("Render skipped: components not initialized", "PhysicsCanvas");
             return;
+        }
 
-        // 清屏
+        // 清屏 - 深灰色背景
         _gl.ClearColor(0.1f, 0.1f, 0.15f, 1.0f);
         _gl.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
@@ -194,12 +197,26 @@ void main()
         _shader.SetUniform("uView", _viewMatrix);
 
         // 渲染所有物体
+        int renderedCount = 0;
         foreach (var obj in _engine.Objects)
         {
             if (obj is RigidBody rb)
             {
-                RenderRigidBody(rb);
+                try
+                {
+                    RenderRigidBody(rb);
+                    renderedCount++;
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error($"Error rendering {rb.Name}", ex, "PhysicsCanvas");
+                }
             }
+        }
+
+        if (renderedCount == 0 && _engine.Objects.Count > 0)
+        {
+            _logger.Warning($"No objects rendered, but engine has {_engine.Objects.Count} objects", "PhysicsCanvas");
         }
 
         // 请求下一帧
@@ -212,7 +229,10 @@ void main()
             return;
 
         if (body.Shape == null)
+        {
+            _logger.Warning($"Body {body.Name} has no shape", "PhysicsCanvas");
             return;
+        }
 
         var modelMatrix = Matrix4x4.CreateTranslation(new Vector3(body.Position, 0));
         _shader.SetUniform("uModel", modelMatrix);
@@ -230,6 +250,8 @@ void main()
                 ? new Vector4(0.2f, 0.8f, 0.2f, 1.0f)
                 : new Vector4(0.3f, 0.6f, 1.0f, 1.0f);
         }
+
+        _logger.Debug($"Rendering {body.Name} ({body.Shape.GetType().Name}) at ({body.Position.X:F2}, {body.Position.Y:F2}) color=({color.X:F2},{color.Y:F2},{color.Z:F2})", "PhysicsCanvas");
 
         if (body.Shape is CircleShape circle)
         {
