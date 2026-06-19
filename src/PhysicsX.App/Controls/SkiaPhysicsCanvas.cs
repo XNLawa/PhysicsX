@@ -42,7 +42,8 @@ public class SkiaPhysicsCanvas : Control
         _engine = new MechanicsEngine { Gravity = 9.8 };
         _logger.Info("Physics engine initialized with gravity = 9.8", "SkiaPhysicsCanvas");
 
-        CreateSampleScene();
+        // 不再自动创建示例场景，等待用户手动添加对象
+        // CreateSampleScene();
         _logger.Info($"Skia canvas initialized. Scene has {_engine.Objects.Count} objects", "SkiaPhysicsCanvas");
     }
 
@@ -238,11 +239,13 @@ public class SkiaPhysicsCanvas : Control
     {
         _isRunning = true;
         _timer?.Start();
+        _logger.Info("Simulation started", "SkiaPhysicsCanvas");
     }
 
     public void Pause()
     {
         _isRunning = false;
+        _logger.Info("Simulation paused", "SkiaPhysicsCanvas");
     }
 
     public void Reset()
