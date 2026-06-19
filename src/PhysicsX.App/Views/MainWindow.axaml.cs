@@ -81,6 +81,20 @@ public partial class MainWindow : Window
                     canvas.SyncSceneObjects(viewModel.SceneEditor.SceneObjects);
                 };
 
+                // 连接交互绘图模式
+                viewModel.SceneEditor.OnToolModeChanged = (mode) =>
+                {
+                    _logger.Info($"Tool mode changed to: {mode}", "MainWindow");
+                    canvas.SetDrawMode(mode);
+                };
+
+                // 连接物体创建回调
+                canvas.OnObjectCreated = (rigidBody) =>
+                {
+                    _logger.Info($"Object created: {rigidBody.Name}", "MainWindow");
+                    viewModel.SceneEditor.AddObjectFromPhysics(rigidBody);
+                };
+
                 // 初始同步：如果编辑器已有对象，立即同步
                 if (viewModel.SceneEditor.SceneObjects.Count > 0)
                 {

@@ -24,137 +24,100 @@ public partial class SceneEditorViewModel : ViewModelBase
     [ObservableProperty]
     private SceneObjectViewModel? _selectedObject;
 
-    [ObservableProperty]
-    private string _toolMode = "Select"; // Select, AddCircle, AddBox, AddGround
+    private string _toolMode = "Select";
+    public string ToolMode
+    {
+        get => _toolMode;
+        set
+        {
+            if (_toolMode != value)
+            {
+                _toolMode = value;
+                OnPropertyChanged(nameof(ToolMode));
+            }
+        }
+    }
 
     // 回调：用于通知 View 更新场景
     public Action<SceneProject>? OnSceneLoaded { get; set; }
     public Action? OnSceneCleared { get; set; }
+    public Action<string>? OnToolModeChanged { get; set; }
 
     [RelayCommand]
     private void AddCircle()
     {
-        var obj = new SceneObjectViewModel
-        {
-            Id = Guid.NewGuid().ToString(),
-            Name = $"小球 {SceneObjects.Count + 1}",
-            Type = "Circle",
-            Position = new Vector2(0, 0),
-            Radius = 0.5f,
-            Mass = 1.0,
-            Color = "#3B82F6"
-        };
-        SceneObjects.Add(obj);
-        SelectedObject = obj;
+        ToolMode = "Circle";
+        OnToolModeChanged?.Invoke("Circle");
     }
 
     [RelayCommand]
     private void AddBox()
     {
-        var obj = new SceneObjectViewModel
-        {
-            Id = Guid.NewGuid().ToString(),
-            Name = $"箱子 {SceneObjects.Count + 1}",
-            Type = "Box",
-            Position = new Vector2(0, 0),
-            Width = 1.0f,
-            Height = 1.0f,
-            Mass = 2.0,
-            Color = "#EF4444"
-        };
-        SceneObjects.Add(obj);
-        SelectedObject = obj;
+        ToolMode = "Box";
+        OnToolModeChanged?.Invoke("Box");
     }
 
     [RelayCommand]
     private void AddGround()
     {
-        var obj = new SceneObjectViewModel
-        {
-            Id = Guid.NewGuid().ToString(),
-            Name = $"地面 {SceneObjects.Count + 1}",
-            Type = "Box",
-            Position = new Vector2(0, 8),
-            Width = 30.0f,
-            Height = 1.0f,
-            IsStatic = true,
-            Color = "#10B981"
-        };
-        SceneObjects.Add(obj);
-        SelectedObject = obj;
+        ToolMode = "Ground";
+        OnToolModeChanged?.Invoke("Ground");
     }
 
     [RelayCommand]
     private void AddSpring()
     {
-        var obj = new SceneObjectViewModel
-        {
-            Id = Guid.NewGuid().ToString(),
-            Name = $"弹簧 {SceneObjects.Count + 1}",
-            Type = "Spring",
-            Position = new Vector2(0, 0),
-            Stiffness = 100.0f,
-            Damping = 0.1f,
-            Radius = 0.2f,
-            Width = 2.0f,
-            Color = "#F59E0B"
-        };
-        SceneObjects.Add(obj);
-        SelectedObject = obj;
+        ToolMode = "Spring";
+        OnToolModeChanged?.Invoke("Spring");
     }
 
     [RelayCommand]
     private void AddRope()
     {
-        var obj = new SceneObjectViewModel
-        {
-            Id = Guid.NewGuid().ToString(),
-            Name = $"绳索 {SceneObjects.Count + 1}",
-            Type = "Rope",
-            Position = new Vector2(0, 0),
-            MaxLength = 3.0f,
-            Thickness = 0.1f,
-            Color = "#8B4513"
-        };
-        SceneObjects.Add(obj);
-        SelectedObject = obj;
+        ToolMode = "Rope";
+        OnToolModeChanged?.Invoke("Rope");
     }
 
     [RelayCommand]
     private void AddRamp()
     {
-        var obj = new SceneObjectViewModel
-        {
-            Id = Guid.NewGuid().ToString(),
-            Name = $"斜面 {SceneObjects.Count + 1}",
-            Type = "Ramp",
-            Position = new Vector2(0, 5),
-            Width = 5.0f,
-            Height = 2.0f,
-            Angle = 30.0f,
-            IsStatic = true,
-            Color = "#9CA3AF"
-        };
-        SceneObjects.Add(obj);
-        SelectedObject = obj;
+        ToolMode = "Ramp";
+        OnToolModeChanged?.Invoke("Ramp");
     }
 
     [RelayCommand]
     private void AddCapsule()
     {
+        ToolMode = "Capsule";
+        OnToolModeChanged?.Invoke("Capsule");
+    }
+
+    public void AddObjectFromPhysics(RigidBody rb)
+    {
         var obj = new SceneObjectViewModel
         {
-            Id = Guid.NewGuid().ToString(),
-            Name = $"胶囊 {SceneObjects.Count + 1}",
-            Type = "Capsule",
-            Position = new Vector2(0, 0),
-            Width = 1.0f, // Length
-            Radius = 0.3f,
-            Mass = 1.5,
-            Color = "#A78BFA"
+            Id = rb.Id,
+            Name = rb.Name,
+            Type = rb.Shape switch
+            {
+                CircleShape => "Circle",
+                BoxShape => rb.IsStatic ? "Ground" : "Box",
+                _ => "Unknown"
+            },
+            Position = rb.Position,
+            Velocity = rb.Velocity,
+            Mass = rb.Mass,
+            Restitution = rb.Restitution,
+            Friction = rb.Friction,
+            IsStatic = rb.IsStatic,
+            UseGravity = rb.UseGravity,
+            Radius = (rb.Shape as CircleShape)?.Radius,
+            Width = (rb.Shape as BoxShape)?.Width,
+            Height = (rb.Shape as BoxShape)?.Height,
+            Color = "#DCDCDC" // 默认灰色
         };
         SceneObjects.Add(obj);
-        SelectedObject = obj;
+        ToolMode = "Select"; // 创建后回到选择模式
     }
 
     [RelayCommand]
@@ -307,7 +270,10 @@ public partial class SceneObjectViewModel : ViewModelBase
     private float? _height;
 
     [ObservableProperty]
-    private string _color = "#3B82F6";
+    private string _color = "#DCDCDC"; // 默认灰色填充
+
+    [ObservableProperty]
+    private string _strokeColor = "#000000"; // 默认黑色边框
 
     // 热力学属性
     [ObservableProperty]
@@ -353,6 +319,7 @@ public partial class SceneObjectViewModel : ViewModelBase
             Width = Width,
             Height = Height,
             Color = Color,
+            StrokeColor = StrokeColor,
             Temperature = Temperature,
             EnableThermal = EnableThermal,
             Material = Material,
@@ -381,7 +348,8 @@ public partial class SceneObjectViewModel : ViewModelBase
             Radius = obj.Radius,
             Width = obj.Width,
             Height = obj.Height,
-            Color = obj.Color,
+            Color = obj.Color ?? "#DCDCDC",
+            StrokeColor = obj.StrokeColor ?? "#000000",
             Temperature = obj.Temperature ?? 20.0,
             EnableThermal = obj.EnableThermal ?? false,
             Material = obj.Material ?? "Aluminum",
@@ -410,6 +378,7 @@ public partial class SceneObjectViewModel : ViewModelBase
             Width = Width,
             Height = Height,
             Color = Color,
+            StrokeColor = StrokeColor,
             Temperature = Temperature,
             EnableThermal = EnableThermal,
             Material = Material,

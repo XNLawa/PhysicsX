@@ -75,7 +75,10 @@ public class SceneObject
     public float? Height { get; set; }
 
     [JsonPropertyName("color")]
-    public string Color { get; set; } = "#3B82F6";
+    public string Color { get; set; } = "#DCDCDC"; // 默认灰色填充
+
+    [JsonPropertyName("strokeColor")]
+    public string? StrokeColor { get; set; } = "#000000"; // 默认黑色边框
 
     // 热力学属性
     [JsonPropertyName("temperature")]

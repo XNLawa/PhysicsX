@@ -108,7 +108,7 @@ public class MechanicsEngine : ISimulationEngine
             if (!obj.IsEnabled || obj.IsStatic)
                 continue;
 
-            // 施加重力
+            // 施加重力（竖直向下，正Y向下）
             if (obj.UseGravity && obj.Mass > 0)
             {
                 var gravityForce = new Vector2(0, (float)(obj.Mass * Gravity));
