@@ -29,10 +29,10 @@ public partial class MainWindow : Window
         {
             _logger.Info("DataContext is MainWindowViewModel", "MainWindow");
 
-            var canvas = this.FindControl<Controls.PhysicsCanvas>("PhysicsCanvas");
+            var canvas = this.FindControl<Controls.SkiaPhysicsCanvas>("PhysicsCanvas");
             if (canvas != null)
             {
-                _logger.Info("PhysicsCanvas control found", "MainWindow");
+                _logger.Info("SkiaPhysicsCanvas control found", "MainWindow");
 
                 // 绑定控制回调
                 viewModel.OnPlayPause = () =>

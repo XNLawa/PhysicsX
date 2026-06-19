@@ -146,8 +146,9 @@
             </Border>
 
             <!-- 中间画布 -->
-            <controls:PhysicsCanvas Grid.Column="1"
-                                   Name="PhysicsCanvas"/>
+            <controls:SkiaPhysicsCanvas Grid.Column="1"
+                                        Name="PhysicsCanvas"
+                                        ClipToBounds="True"/>
 
             <!-- 右侧属性面板 -->
             <Border Grid.Column="2" Background="#252526" BorderBrush="#3E3E42" BorderThickness="1,0,0,0"
